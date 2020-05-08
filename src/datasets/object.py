@@ -54,13 +54,19 @@ class OBJECT_Dataset(TorchvisionDataset):
                 (0.3185215984033291, 0.3185215984033291, 0.3185215984033291),  # 14
                 ]
 
-        transform_train = transforms.Compose([transforms.ToTensor(),
-                                        transforms.Normalize(mean[self.normal_classes], std[self.normal_classes]),
-                                        ])
+        # transform_train = transforms.Compose([transforms.ToTensor(),
+        #                                 transforms.Normalize(mean[self.normal_classes], std[self.normal_classes]),
+        #                                 transforms.Normalize([-1] * 3, [2] * 3)])
+        #
+        # transform_test = transforms.Compose([transforms.Resize(256),
+        #                                       transforms.ToTensor(),
+        #                                       transforms.Normalize(mean[self.normal_classes], std[self.normal_classes]),
+        #                                      transforms.Normalize([-1] * 3, [2] * 3)])
+
+        transform_train = transforms.Compose([transforms.ToTensor()])
 
         transform_test = transforms.Compose([transforms.Resize(256),
-                                              transforms.ToTensor(),
-                                              transforms.Normalize(mean[self.normal_classes], std[self.normal_classes])])
+                                             transforms.ToTensor()])
         self.train_set = ImageFolder(root=self.root +'/train',transform =transform_train )
         self.test_set = ImageFolder(root=self.root + '/test', transform=transform_test)
         self.test_data = []

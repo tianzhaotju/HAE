@@ -3,6 +3,7 @@ from base.base_dataset import BaseADDataset
 from base.base_net import BaseNet
 from sklearn.metrics import roc_auc_score
 from utils.pytorch_ssim import pytorch_ssim
+from utils.plot_rescons import plot_reconstruction
 
 
 import logging
@@ -54,8 +55,11 @@ class AETrainer(BaseTrainer):
                     inputs, _, _ = data
                 else:
                     inputs, _, _ = data
+
                 inputs = inputs.to(self.device)
 
+                # np.save('./log/object/'+str(dataset.normal_classes)+'/Images.npy', inputs.cpu().numpy()[-32:])
+                # exit(0)
                 # Zero the network parameter gradients
                 optimizer.zero_grad()
 
@@ -110,6 +114,7 @@ class AETrainer(BaseTrainer):
                 else:
                     inputs, labels, idx = data
                 inputs = inputs.to(self.device)
+                np.save('./log/object/'+str(dataset.normal_classes)+'/Images.npy', inputs.cpu().numpy()[-32:])
                 outputs = ae_net(inputs)
                 if self.ae_loss_type == 'ssim':
                     scores = -ssim_loss(inputs,outputs)
@@ -149,4 +154,5 @@ class AETrainer(BaseTrainer):
         self.test_scores = idx_label_score
         logger.info('Autoencoder testing time: %.3f' % test_time)
         logger.info('Finished testing autoencoder.')
+        plot_reconstruction(ae_net, self.device, self.ae_loss_type, dataset.normal_classes)
 

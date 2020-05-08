@@ -283,14 +283,14 @@ if __name__ == '__main__':
     main()
 #python main.py mnist mnist_LeNet ../log/mnist ../data --objective deep-GMM --lr 0.0001 --n_epochs 5 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --ae_lr 0.001 --ae_n_epochs 10 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --normal_class [2,3]
 #python main.py cifar10 cifar10_LeNet_ELU ../log/cifar10 ../data --objective deep-GMM --lr 0.0001 --n_epochs 5 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --seed -1 --ae_lr 0.0001 --ae_n_epochs 10 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --normal_class [0,1]
-# python main.py object object ../log/object ../data/Mvtec/ --objective deep-GMM --lr 0.0001 --n_epochs 1 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --seed -1 --ae_lr 0.0001 --ae_n_epochs 100 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --ae_loss_type 'ssim' --ae_only True --normal_class 9
+# python src/main.py object object ./log/object ./data/Mvtec/ --objective deep-GMM --lr 0.0001 --n_epochs 1 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --seed -1 --ae_lr 0.0001 --ae_n_epochs 100 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --ae_loss_type 'ssim' --ae_only True --normal_class 9
 #conda activate Deep_GMM
 
 # Motivaton on Mnist
 
 # Auto-encoder
-#python src/main.py mnist mnist_motivation ./log/mnist ./data --objective one-class --lr 0.001 --n_epochs 30 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --ae_lr 0.001 --ae_n_epochs 30 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --normal_class 3 --ae_only True
-#one-class
+#python src/main.py mnist mnist_motivation ./log/mnist ./data --objective one-class --lr 0.001 --n_epochs 30 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --ae_lr 0.001 --ae_n_epochs 30 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --ae_only True --normal_class 0
+# One-class
 #python src/main.py mnist mnist_motivation ./log/mnist ./data --objective one-class --lr 0.001 --n_epochs 50 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain False --ae_lr 0.001 --ae_n_epochs 30 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --normal_class 3
 #Hybrid
 #python src/main.py mnist mnist_motivation ./log/mnist ./data --objective hybrid --lr 0.001 --n_epochs 50 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain False --ae_lr 0.001 --ae_n_epochs 30 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --normal_class 3
