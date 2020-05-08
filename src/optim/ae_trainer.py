@@ -64,9 +64,40 @@ class AETrainer(BaseTrainer):
                 optimizer.zero_grad()
 
                 # Update network parameters via backpropagation: forward + backward + optimize
-                outputs = ae_net(inputs)
+                if self.ae_loss_type == 'object_HAE' or self.ae_loss_type == 'object_HAE_ssim':
+                    x, x_reco, rep_0, rep_0_reco, rep_1, rep_1_reco, rep_2, rep_2_reco, rep_3, rep_3_reco, rep_4, rep_4_reco, \
+                    rep_5, rep_5_reco, rep_6, rep_6_reco, rep_7, rep_7_reco, rep_8, rep_8_reco, rep_9, rep_9_reco, rep_10 = ae_net(inputs)
+                else:
 
-                if self.ae_loss_type == 'ssim':
+                    outputs = ae_net(inputs)
+
+                if self.ae_loss_type == 'object_HAE' :
+
+                    scores = torch.sum((x - x_reco) ** 2, dim=tuple(range(1, x_reco.dim())))+  \
+                              torch.sum((rep_0 - rep_0_reco) ** 2, dim=tuple(range(1, rep_0_reco.dim()))) + \
+                              torch.sum((rep_1 - rep_1_reco) ** 2, dim=tuple(range(1, rep_1_reco.dim()))) + \
+                              torch.sum((rep_2 - rep_2_reco) ** 2, dim=tuple(range(1, rep_2_reco.dim()))) + \
+                              torch.sum((rep_3 - rep_3_reco) ** 2, dim=tuple(range(1, rep_3_reco.dim()))) + \
+                              torch.sum((rep_4 - rep_4_reco) ** 2, dim=tuple(range(1, rep_4_reco.dim()))) + \
+                              torch.sum((rep_5 - rep_5_reco) ** 2, dim=tuple(range(1, rep_5_reco.dim()))) + \
+                              torch.sum((rep_6 - rep_6_reco) ** 2, dim=tuple(range(1, rep_6_reco.dim()))) + \
+                              torch.sum((rep_7 - rep_7_reco) ** 2, dim=tuple(range(1, rep_7_reco.dim()))) + \
+                              torch.sum((rep_8 - rep_8_reco) ** 2, dim=tuple(range(1, rep_8_reco.dim()))) + \
+                              torch.sum((rep_9 - rep_9_reco) ** 2, dim=tuple(range(1, rep_9_reco.dim()))) + \
+                              torch.sum((rep_10) ** 2, dim=tuple(range(1, rep_10.dim())))
+                elif self.ae_loss_type == 'object_HAE_ssim':
+                    scores = -ssim_loss(x,x_reco)- \
+                             -ssim_loss(rep_0, rep_0_reco)- \
+                             -ssim_loss(rep_1, rep_1_reco)- \
+                             -ssim_loss(rep_2, rep_2_reco)- \
+                             -ssim_loss(rep_3, rep_3_reco) - \
+                             -ssim_loss(rep_4, rep_4_reco) - \
+                             -ssim_loss(rep_5, rep_5_reco) - \
+                             -ssim_loss(rep_6, rep_6_reco) - \
+                             -ssim_loss(rep_7, rep_7_reco) - \
+                             -ssim_loss(rep_8, rep_8_reco) - \
+                             -ssim_loss(rep_9, rep_9_reco)
+                elif self.ae_loss_type == 'ssim':
                     scores = -ssim_loss(inputs, outputs)
                 else:
                     scores = torch.sum((outputs - inputs) ** 2, dim=tuple(range(1, outputs.dim())))
@@ -115,8 +146,39 @@ class AETrainer(BaseTrainer):
                     inputs, labels, idx = data
                 inputs = inputs.to(self.device)
                 np.save('./log/object/'+str(dataset.normal_classes)+'/Images.npy', inputs.cpu().numpy()[-32:])
-                outputs = ae_net(inputs)
-                if self.ae_loss_type == 'ssim':
+                if self.ae_loss_type == 'object_HAE' or self.ae_loss_type == 'object_HAE_ssim':
+                    x, x_reco, rep_0, rep_0_reco, rep_1, rep_1_reco, rep_2, rep_2_reco, rep_3, rep_3_reco, rep_4, rep_4_reco, \
+                    rep_5, rep_5_reco, rep_6, rep_6_reco, rep_7, rep_7_reco, rep_8, rep_8_reco, rep_9, rep_9_reco, rep_10=ae_net(inputs)
+                else:
+                    outputs = ae_net(inputs)
+
+                if self.ae_loss_type == 'object_HAE':
+                    scores =  torch.sum((x - x_reco) ** 2, dim=tuple(range(1, x_reco.dim())))+  \
+                              torch.sum((rep_0 - rep_0_reco) ** 2, dim=tuple(range(1, rep_0_reco.dim()))) + \
+                              torch.sum((rep_1 - rep_1_reco) ** 2, dim=tuple(range(1, rep_1_reco.dim()))) + \
+                              torch.sum((rep_2 - rep_2_reco) ** 2, dim=tuple(range(1, rep_2_reco.dim()))) + \
+                              torch.sum((rep_3 - rep_3_reco) ** 2, dim=tuple(range(1, rep_3_reco.dim()))) + \
+                              torch.sum((rep_4 - rep_4_reco) ** 2, dim=tuple(range(1, rep_4_reco.dim()))) + \
+                              torch.sum((rep_5 - rep_5_reco) ** 2, dim=tuple(range(1, rep_5_reco.dim()))) + \
+                              torch.sum((rep_6 - rep_6_reco) ** 2, dim=tuple(range(1, rep_6_reco.dim()))) + \
+                              torch.sum((rep_7 - rep_7_reco) ** 2, dim=tuple(range(1, rep_7_reco.dim()))) + \
+                              torch.sum((rep_8 - rep_8_reco) ** 2, dim=tuple(range(1, rep_8_reco.dim()))) + \
+                              torch.sum((rep_9 - rep_9_reco) ** 2, dim=tuple(range(1, rep_9_reco.dim()))) + \
+                              torch.sum((rep_10) ** 2, dim=tuple(range(1, rep_10.dim())))
+
+                elif self.ae_loss_type == 'object_HAE_ssim':
+                    scores = -ssim_loss(x,x_reco)- \
+                             -ssim_loss(rep_0, rep_0_reco)- \
+                             -ssim_loss(rep_1, rep_1_reco)- \
+                             -ssim_loss(rep_2, rep_2_reco)- \
+                             -ssim_loss(rep_3, rep_3_reco) - \
+                             -ssim_loss(rep_4, rep_4_reco) - \
+                             -ssim_loss(rep_5, rep_5_reco) - \
+                             -ssim_loss(rep_6, rep_6_reco) - \
+                             -ssim_loss(rep_7, rep_7_reco) - \
+                             -ssim_loss(rep_8, rep_8_reco) - \
+                             -ssim_loss(rep_9, rep_9_reco)
+                elif self.ae_loss_type == 'ssim':
                     scores = -ssim_loss(inputs,outputs)
                 else:
                     scores = torch.sum((outputs - inputs) ** 2, dim=tuple(range(1, outputs.dim())))

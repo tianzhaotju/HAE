@@ -17,7 +17,7 @@ class MNIST_Motivation(BaseNet):
         self.rep_dim4 = int(16 * 3 * 3)
         self.rep_dim5 = int(9 * 1 * 1)
 
-        self.rep_dim_former = self.rep_dim5
+        self.rep_dim_former = self.rep_dim3
         self.rep_dim = int(self.rep_dim_former / 9)
 
         self.cate_dense_2 =32
@@ -55,30 +55,30 @@ class MNIST_Motivation(BaseNet):
 
     def forward(self, x):
 
-        # layer 5
-        x = self.conv1(x)
-        x = F.leaky_relu(self.bn1(x))
-        x = self.conv2(x)
-        x = F.leaky_relu(self.bn2(x))
-        x = self.conv3(x)
-        x = F.leaky_relu(self.bn3(x))
-        x = self.conv4(x)
-        x = F.leaky_relu(self.bn4(x))
-        x = self.conv5(x)
-
-        rep = x.view(x.size(0), -1)
-
-
-        rep = self.dense(rep)
-        x = self.deconv5(x)
-        x = self.deconv4(x)
-        x = F.leaky_relu(self.debn4(x))
-        x = self.deconv3(x)
-        x = F.leaky_relu(self.debn3(x))
-        x = self.deconv2(x)
-        x = F.leaky_relu(self.debn2(x))
-        x = self.deconv1(x)
-        x = F.leaky_relu(self.debn1(x))
+        # # layer 5
+        # x = self.conv1(x)
+        # x = F.leaky_relu(self.bn1(x))
+        # x = self.conv2(x)
+        # x = F.leaky_relu(self.bn2(x))
+        # x = self.conv3(x)
+        # x = F.leaky_relu(self.bn3(x))
+        # x = self.conv4(x)
+        # x = F.leaky_relu(self.bn4(x))
+        # x = self.conv5(x)
+        #
+        # rep = x.view(x.size(0), -1)
+        #
+        #
+        # rep = self.dense(rep)
+        # x = self.deconv5(x)
+        # x = self.deconv4(x)
+        # x = F.leaky_relu(self.debn4(x))
+        # x = self.deconv3(x)
+        # x = F.leaky_relu(self.debn3(x))
+        # x = self.deconv2(x)
+        # x = F.leaky_relu(self.debn2(x))
+        # x = self.deconv1(x)
+        # x = F.leaky_relu(self.debn1(x))
 
 
         # # layer 4
@@ -99,22 +99,22 @@ class MNIST_Motivation(BaseNet):
         # x = self.deconv1(x)
         # x = F.leaky_relu(self.debn1(x))
 
-        # #layer 3
-        # x = self.conv1(x)
-        # x = F.leaky_relu(self.bn1(x))
-        # x = self.conv2(x)
-        # x = F.leaky_relu(self.bn2(x))
-        # x = self.conv3(x)
-        # rep = x.view(x.size(0), -1)
-        #
-        # rep = self.dense(rep)
-        #
-        # x = self.deconv3(x)
-        # x = F.leaky_relu(self.debn3(x))
-        # x = self.deconv2(x)
-        # x = F.leaky_relu(self.debn2(x))
-        # x = self.deconv1(x)
-        # x = F.leaky_relu(self.debn1(x))
+        #layer 3
+        x = self.conv1(x)
+        x = F.leaky_relu(self.bn1(x))
+        x = self.conv2(x)
+        x = F.leaky_relu(self.bn2(x))
+        x = self.conv3(x)
+        rep = x.view(x.size(0), -1)
+
+        rep = self.dense(rep)
+
+        x = self.deconv3(x)
+        x = F.leaky_relu(self.debn3(x))
+        x = self.deconv2(x)
+        x = F.leaky_relu(self.debn2(x))
+        x = self.deconv1(x)
+        x = F.leaky_relu(self.debn1(x))
         #
         # # layer 2
         # x = self.conv1(x)
@@ -150,7 +150,7 @@ class MNIST_Motivation_Autoencoder(BaseNet):
         self.rep_dim4 = int(16 * 3 * 3)
         self.rep_dim5 = int(9 * 1 * 1)
 
-        self.rep_dim_former = self.rep_dim5
+        self.rep_dim_former = self.rep_dim3
 
         self.rep_dim = int(self.rep_dim_former / 9)
 
@@ -188,29 +188,29 @@ class MNIST_Motivation_Autoencoder(BaseNet):
         self.debn5 = nn.BatchNorm2d(16, eps=1e-04, affine=False)
 
     def forward(self, x):
-        # layer 5
-        x = self.conv1(x)
-        x = F.leaky_relu(self.bn1(x))
-        x = self.conv2(x)
-        x = F.leaky_relu(self.bn2(x))
-        x = self.conv3(x)
-        x = F.leaky_relu(self.bn3(x))
-        x = self.conv4(x)
-        x = F.leaky_relu(self.bn4(x))
-        x = self.conv5(x)
-
-        rep = x.view(x.size(0), -1)
-        rep = self.dense(rep)
-
-        x = self.deconv5(x)
-        x = self.deconv4(x)
-        x = F.leaky_relu(self.debn4(x))
-        x = self.deconv3(x)
-        x = F.leaky_relu(self.debn3(x))
-        x = self.deconv2(x)
-        x = F.leaky_relu(self.debn2(x))
-        x = self.deconv1(x)
-        x = F.leaky_relu(self.debn1(x))
+        # # layer 5
+        # x = self.conv1(x)
+        # x = F.leaky_relu(self.bn1(x))
+        # x = self.conv2(x)
+        # x = F.leaky_relu(self.bn2(x))
+        # x = self.conv3(x)
+        # x = F.leaky_relu(self.bn3(x))
+        # x = self.conv4(x)
+        # x = F.leaky_relu(self.bn4(x))
+        # x = self.conv5(x)
+        #
+        # rep = x.view(x.size(0), -1)
+        # rep = self.dense(rep)
+        #
+        # x = self.deconv5(x)
+        # x = self.deconv4(x)
+        # x = F.leaky_relu(self.debn4(x))
+        # x = self.deconv3(x)
+        # x = F.leaky_relu(self.debn3(x))
+        # x = self.deconv2(x)
+        # x = F.leaky_relu(self.debn2(x))
+        # x = self.deconv1(x)
+        # x = F.leaky_relu(self.debn1(x))
 
         # # layer 4
         # x = self.conv1(x)
@@ -230,20 +230,20 @@ class MNIST_Motivation_Autoencoder(BaseNet):
         # x = self.deconv1(x)
         # x = F.leaky_relu(self.debn1(x))
 
-        ## layer 3
-        # x = self.conv1(x)
-        # x = F.leaky_relu(self.bn1(x))
-        # x = self.conv2(x)
-        # x = F.leaky_relu(self.bn2(x))
-        # x = self.conv3(x)
-        # rep = x.view(x.size(0), -1)
-        # rep = self.dense(rep)
-        # x = self.deconv3(x)
-        # x = F.leaky_relu(self.debn3(x))
-        # x = self.deconv2(x)
-        # x = F.leaky_relu(self.debn2(x))
-        # x = self.deconv1(x)
-        # x = F.leaky_relu(self.debn1(x))
+        # layer 3
+        x = self.conv1(x)
+        x = F.leaky_relu(self.bn1(x))
+        x = self.conv2(x)
+        x = F.leaky_relu(self.bn2(x))
+        x = self.conv3(x)
+        rep = x.view(x.size(0), -1)
+        rep = self.dense(rep)
+        x = self.deconv3(x)
+        x = F.leaky_relu(self.debn3(x))
+        x = self.deconv2(x)
+        x = F.leaky_relu(self.debn2(x))
+        x = self.deconv1(x)
+        x = F.leaky_relu(self.debn1(x))
         #
         # # layer 2
         # x = self.conv1(x)
