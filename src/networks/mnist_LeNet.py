@@ -37,29 +37,86 @@ class MNIST_LeNet(BaseNet):
         self.deconv3 = nn.ConvTranspose2d(8, 1, 5, bias=True, padding=2)
 
     def forward(self, x):
+        # # layer 5
+        # x = self.conv1(x)
+        # x = F.leaky_relu(self.bn1(x))
+        # x = self.conv2(x)
+        # x = F.leaky_relu(self.bn2(x))
+        # x = self.conv3(x)
+        # x = F.leaky_relu(self.bn3(x))
+        # x = self.conv4(x)
+        # x = F.leaky_relu(self.bn4(x))
+        # x = self.conv5(x)
+        #
+        # rep = x.view(x.size(0), -1)
+        #
+        #
+        # rep = self.dense(rep)
+        # x = self.deconv5(x)
+        # x = self.deconv4(x)
+        # x = F.leaky_relu(self.debn4(x))
+        # x = self.deconv3(x)
+        # x = F.leaky_relu(self.debn3(x))
+        # x = self.deconv2(x)
+        # x = F.leaky_relu(self.debn2(x))
+        # x = self.deconv1(x)
+        # x = F.leaky_relu(self.debn1(x))
+
+        # # layer 4
+        # x = self.conv1(x)
+        # x = F.leaky_relu(self.bn1(x))
+        # x = self.conv2(x)
+        # x = F.leaky_relu(self.bn2(x))
+        # x = self.conv3(x)
+        # x = F.leaky_relu(self.bn3(x))
+        # x = self.conv4(x)
+        # rep = x.view(x.size(0), -1)
+        # rep = self.dense(rep)
+        # x = self.deconv4(x)
+        # x = self.deconv3(x)
+        # x = F.leaky_relu(self.debn3(x))
+        # x = self.deconv2(x)
+        # x = F.leaky_relu(self.debn2(x))
+        # x = self.deconv1(x)
+        # x = F.leaky_relu(self.debn1(x))
+
+        # layer 3
         x = self.conv1(x)
-        x = self.pool(F.leaky_relu(self.bn1(x)))
+        x = F.leaky_relu(self.bn1(x))
         x = self.conv2(x)
-        x = self.pool(F.leaky_relu(self.bn2(x)))
-        x = x.view(x.size(0), -1)
-        rep = self.fc1(x)
+        x = F.leaky_relu(self.bn2(x))
+        x = self.conv3(x)
+        rep = x.view(x.size(0), -1)
 
-        cate = self.dense1(rep)
-        cate = self.tanh(cate)
-        cate = nn.Dropout(p=0.5)(cate)
-        cate = self.dense2(cate)
-        cate = self.softmax(cate)
+        rep = self.dense(rep)
 
-        x = rep.view(rep.size(0), int(self.rep_dim / 16), 4, 4)
-        x = F.interpolate(F.leaky_relu(x), scale_factor=2)
-        x = self.deconv1(x)
-        x = F.interpolate(F.leaky_relu(self.bn3(x)), scale_factor=2)
-        x = self.deconv2(x)
-        x = F.interpolate(F.leaky_relu(self.bn4(x)), scale_factor=2)
         x = self.deconv3(x)
-        x = torch.sigmoid(x)
+        x = F.leaky_relu(self.debn3(x))
+        x = self.deconv2(x)
+        x = F.leaky_relu(self.debn2(x))
+        x = self.deconv1(x)
+        x = F.leaky_relu(self.debn1(x))
+        #
+        # # layer 2
+        # x = self.conv1(x)
+        # x = F.leaky_relu(self.bn1(x))
+        # x = self.conv2(x)
+        # rep = x.view(x.size(0), -1)
+        # rep = self.dense(rep)
+        # x = self.deconv2(x)
+        # x = F.leaky_relu(self.debn2(x))
+        # x = self.deconv1(x)
+        # x = F.leaky_relu(self.debn1(x))
+        #
+        # # layer 1
+        # x = self.conv1(x)
+        # x = F.leaky_relu(self.bn1(x))
+        # rep = x.view(x.size(0), -1)
+        # rep = self.dense(rep)
+        # x = self.deconv1(x)
+        # x = F.leaky_relu(self.debn1(x))
 
-        return rep, cate, x
+        return rep, rep, x
 
 
 class MNIST_LeNet_Autoencoder(BaseNet):

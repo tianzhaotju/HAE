@@ -96,12 +96,13 @@ class DeepSVDD(object):
                                     batch_size=batch_size, weight_decay=weight_decay, device=device,
                                     n_jobs_dataloader=n_jobs_dataloader, dataset_name = dataset_name, ae_loss_type=ae_loss_type, ae_only=ae_only  )
         self.ae_net = self.ae_trainer.train(dataset, self.ae_net)
-        self.ae_trainer.test(dataset, self.ae_net)
+        self.init_network_weights_from_pretraining()
+        self.ae_trainer.test(dataset, self.ae_net, self.net)
         # Get results
         # self.results['ae_test_auc'] = self.ae_trainer.test_auc
         # self.results['ae_test_time'] = self.ae_trainer.test_time
         self.results['ae_test_scores'] = self.ae_trainer.test_scores
-        self.init_network_weights_from_pretraining()
+
 
     def init_network_weights_from_pretraining(self):
         """Initialize the Deep SVDD network weights from the encoder weights of the pretraining autoencoder."""

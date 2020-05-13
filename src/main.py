@@ -17,7 +17,7 @@ import torchvision.transforms as transforms
 ################################################################################
 @click.command()
 @click.argument('dataset_name', type=click.Choice(['mnist', 'cifar10', 'object', 'texture']))
-@click.argument('net_name', type=click.Choice(['mnist_LeNet', 'cifar10_LeNet', 'cifar10_LeNet_ELU', 'object', 'texture', 'mnist_motivation', 'object_hae', 'texture_hae', 'minist_hae']))
+@click.argument('net_name', type=click.Choice(['mnist_LeNet', 'cifar10_LeNet', 'cifar10_LeNet_ELU', 'object', 'texture', 'mnist_motivation', 'object_hae', 'texture_hae', 'mnist_hae']))
 @click.argument('xp_path', type=click.Path(exists=True))
 @click.argument('data_path', type=click.Path(exists=True))
 @click.option('--load_config', type=click.Path(exists=True), default=None,
@@ -191,6 +191,7 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, ob
                            ae_only = ae_only)
 
         # Plot most anomalous and most normal (within-class) test samples
+        exit(0)
         indices, labels, scores = zip(*deep_SVDD.results['ae_test_scores'])
         indices, labels, scores = np.array(indices), np.array(labels), np.array(scores)
         idx_sorted = indices[labels == 0][
@@ -217,8 +218,8 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, ob
                     X_outliers[:, i, :, :] *= std[normal_class][i]
                     X_outliers[:, i, :, :] += mean[normal_class][i]
 
-            plot_images_grid(X_normals, export_img=xp_path + '/AE_normals', title='Most normal examples', padding=2)
-            plot_images_grid(X_outliers, export_img=xp_path + '/AE_outliers', title='Most anomalous examples', padding=2)
+            #plot_images_grid(X_normals, export_img=xp_path + '/AE_normals', title='Most normal examples', padding=2)
+            #plot_images_grid(X_outliers, export_img=xp_path + '/AE_outliers', title='Most anomalous examples', padding=2)
             if ae_only:
                 exit(0)
     # Log training details
@@ -295,4 +296,11 @@ if __name__ == '__main__':
 #Hybrid
 #python src/main.py mnist mnist_motivation ./log/mnist ./data --objective hybrid --lr 0.001 --n_epochs 50 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain False --ae_lr 0.001 --ae_n_epochs 30 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --normal_class 3
 
-#python src/main.py object object_hae ./log/object ./data/Mvtec/ --objective deep-GMM --lr 0.0001 --n_epochs 1 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --seed -1 --ae_lr 0.0001 --ae_n_epochs 30 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --ae_loss_type 'HAE' --ae_only True --normal_class 11
+
+#HAE script
+# 5-14
+#python src/main.py object object_hae ./log/object ./data/Mvtec/ --objective deep-GMM --lr 0.0001 --n_epochs 1 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --seed -1 --ae_lr 0.0001 --ae_n_epochs 30 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --ae_loss_type 'object_HAE' --ae_only True --normal_class 11
+# 0-4
+#python src/main.py texture texture_hae ./log/texture ./data/Mvtec/ --objective deep-GMM --lr 0.0001 --n_epochs 1 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --seed -1 --ae_lr 0.0001 --ae_n_epochs 1 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --ae_loss_type 'texture_HAE' --ae_only True --normal_class 0
+
+#python src/main.py mnist mnist_hae ./log/mnist ./data --objective deep-GMM --lr 0.0001 --n_epochs 1 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --seed -1 --ae_lr 0.0001 --ae_n_epochs 30 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --ae_loss_type 'mnist_HAE' --ae_only True --normal_class 1

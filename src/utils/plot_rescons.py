@@ -3,7 +3,7 @@ import numpy as np
 from utils.visualization.plot_images_grid import plot_images_grid
 from utils.pytorch_ssim import  pytorch_ssim
 
-def plot_reconstruction(ae_net,device,ae_loss_type, normal_classes):
+def plot_reconstruction(net,device,ae_loss_type, normal_classes):
     ssim_loss1 = pytorch_ssim.SSIM(window_size=11, size_average=False)
     with torch.no_grad():
         # np.save('./log/object/Reconstruction_evaluation/Images.npy', inputs.cpu().numpy()[-16:])
@@ -47,7 +47,33 @@ def plot_reconstruction(ae_net,device,ae_loss_type, normal_classes):
         # np.save('./log/AnboT/Reconstruction_evaluation/native.npy', inputs.cpu().numpy())
         data_native = np.load(path+'/Images.npy')
         data_native = torch.from_numpy(data_native).to(device)
-        reconstruction = ae_net(data_native)
+
+        reconstructions = []
+
+        if ae_loss_type == 'object_HAE' or ae_loss_type == 'object_HAE_ssim':
+            x_reco, rep_0_reco, rep_1_reco, rep_2_reco, rep_3_reco, rep_4_reco, \
+            rep_5_reco, rep_6_reco, rep_7_reco, rep_8_reco, rep_9_reco = net(
+                data_native)
+            reconstructions.append(x_reco)
+            reconstructions.append(rep_0_reco)
+            reconstructions.append(rep_1_reco)
+            reconstructions.append(rep_2_reco)
+            reconstructions.append(rep_3_reco)
+            reconstructions.append(rep_4_reco)
+            reconstructions.append(rep_5_reco)
+            reconstructions.append(rep_6_reco)
+            reconstructions.append(rep_7_reco)
+            reconstructions.append(rep_8_reco)
+            reconstructions.append(rep_9_reco)
+
+
+        elif ae_loss_type == 'texture_HAE' or ae_loss_type == 'texture_HAE_ssim':
+            pass
+        elif ae_loss_type == 'mnist_HAE' or ae_loss_type == 'mnist_HAE_ssim':
+            pass
+        else:
+            reconstruction = net(data_native)
+            reconstructions.append(reconstruction)
 
         # for i in range(3):
         #     data_native[:, i, :, :] *= std[normal_classes][i]
@@ -58,18 +84,28 @@ def plot_reconstruction(ae_net,device,ae_loss_type, normal_classes):
         #     reconstruction[:, i, :, :] += mean[normal_classes][i]
         #     reconstruction[:, i, :, :] *= 6
         #     reconstruction[:, i, :, :] += 3
+
+        features = []
+
         if ae_loss_type == 'ssim':
-            feature = -ssim_loss1(data_native, reconstruction)
+            for reconstruction in reconstructions:
+                feature = -ssim_loss1(data_native, reconstruction)
+                features.append(feature)
         else:
-            feature = (data_native - reconstruction) ** 2
+            for reconstruction in reconstructions:
+                feature = (data_native - reconstruction) ** 2
+                features.append(feature)
 
         plot_images_grid(data_native, export_img=path + '/Img_native', title='Images', nrow=4, padding=4)
-        # plot_images_grid(torch.tensor(np.transpose(reconstruction.cpu().numpy(), (0, 3, 1, 2))), export_img=path + '/reconstruction', title='Reconstructions', padding=2)
-        plot_images_grid(torch.tensor(reconstruction), export_img=path + '/Img_reconstruction', title='Reconstructions',
-                         nrow=4, padding=4)
-        plot_images_grid(torch.tensor(feature), export_img=path + '/Img_feature', title='Feature Map', nrow=4,
-                         padding=4)
         with torch.no_grad():
             np.save('./log/object/' + str(normal_classes) + '/Data_Images.npy', data_native.cpu().numpy())
-            np.save('./log/object/' + str(normal_classes) + '/Data_Reconstruction.npy', reconstruction.cpu().numpy())
-            np.save('./log/object/' + str(normal_classes) + '/Data_Feature.npy', feature.cpu().numpy())
+
+        for i in range(len(features)):
+            # plot_images_grid(torch.tensor(np.transpose(reconstruction.cpu().numpy(), (0, 3, 1, 2))), export_img=path + '/reconstruction', title='Reconstructions', padding=2)
+            plot_images_grid(torch.tensor(reconstructions[i]), export_img=path + '/Img_reconstruction_'+str(i), title='Reconstructions '+str(i),
+                             nrow=4, padding=4)
+            plot_images_grid(torch.tensor(features[i]), export_img=path + '/Img_feature_'+str(i), title='Feature Map '+str(i), nrow=4,
+                             padding=4)
+            with torch.no_grad():
+                np.save('./log/object/' + str(normal_classes) + '/Data_Reconstruction_'+str(i)+'.npy', reconstruction.cpu().numpy())
+                np.save('./log/object/' + str(normal_classes) + '/Data_Feature_'+str(i)+'.npy', feature.cpu().numpy())
