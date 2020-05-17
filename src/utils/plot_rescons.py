@@ -52,8 +52,7 @@ def plot_reconstruction(net,device,ae_loss_type, normal_classes):
 
         if ae_loss_type == 'object_HAE' or ae_loss_type == 'object_HAE_ssim':
             x_reco, rep_0_reco, rep_1_reco, rep_2_reco, rep_3_reco, rep_4_reco, \
-            rep_5_reco, rep_6_reco, rep_7_reco, rep_8_reco, rep_9_reco = net(
-                data_native)
+            rep_5_reco, rep_6_reco, rep_7_reco, rep_8_reco, rep_9_reco = net(data_native)
             reconstructions.append(x_reco)
             reconstructions.append(rep_0_reco)
             reconstructions.append(rep_1_reco)

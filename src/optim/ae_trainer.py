@@ -23,6 +23,7 @@ class AETrainer(BaseTrainer):
         self.test_scores = None
 
     def train(self, dataset: BaseADDataset, ae_net: BaseNet):
+
         logger = logging.getLogger()
 
         # Set device for network
@@ -61,7 +62,7 @@ class AETrainer(BaseTrainer):
 
                 # np.save('./log/object/'+str(dataset.normal_classes)+'/Images.npy', inputs.cpu().numpy()[-32:])
                 # exit(0)
-                # Zero the network parameter gradients
+                #Zero the network parameter gradients
                 optimizer.zero_grad()
 
                 # Update network parameters via backpropagation: forward + backward + optimize
@@ -81,19 +82,35 @@ class AETrainer(BaseTrainer):
 
                 if self.ae_loss_type == 'object_HAE' :
 
-                    scores = torch.sum((x - x_reco) ** 2, dim=tuple(range(1, x_reco.dim())))+  \
-                              torch.sum((rep_0 - rep_0_reco) ** 2, dim=tuple(range(1, rep_0_reco.dim()))) + \
-                              torch.sum((rep_1 - rep_1_reco) ** 2, dim=tuple(range(1, rep_1_reco.dim()))) + \
-                              torch.sum((rep_2 - rep_2_reco) ** 2, dim=tuple(range(1, rep_2_reco.dim()))) + \
-                              torch.sum((rep_3 - rep_3_reco) ** 2, dim=tuple(range(1, rep_3_reco.dim()))) + \
-                              torch.sum((rep_4 - rep_4_reco) ** 2, dim=tuple(range(1, rep_4_reco.dim()))) + \
-                              torch.sum((rep_5 - rep_5_reco) ** 2, dim=tuple(range(1, rep_5_reco.dim()))) + \
-                              torch.sum((rep_6 - rep_6_reco) ** 2, dim=tuple(range(1, rep_6_reco.dim()))) + \
-                              torch.sum((rep_7 - rep_7_reco) ** 2, dim=tuple(range(1, rep_7_reco.dim()))) + \
-                              torch.sum((rep_8 - rep_8_reco) ** 2, dim=tuple(range(1, rep_8_reco.dim()))) + \
-                              torch.sum((rep_9 - rep_9_reco) ** 2, dim=tuple(range(1, rep_9_reco.dim()))) + \
-                              torch.sum((rep_10) ** 2, dim=tuple(range(1, rep_10.dim())))
-                    loss = torch.mean(scores)
+                    # scores = torch.sum((x - x_reco) ** 2, dim=tuple(range(1, x_reco.dim())))+  \
+                    #           torch.sum((rep_0 - rep_0_reco) ** 2, dim=tuple(range(1, rep_0_reco.dim()))) + \
+                    #           torch.sum((rep_1 - rep_1_reco) ** 2, dim=tuple(range(1, rep_1_reco.dim()))) + \
+                    #           torch.sum((rep_2 - rep_2_reco) ** 2, dim=tuple(range(1, rep_2_reco.dim()))) + \
+                    #           torch.sum((rep_3 - rep_3_reco) ** 2, dim=tuple(range(1, rep_3_reco.dim()))) + \
+                    #           torch.sum((rep_4 - rep_4_reco) ** 2, dim=tuple(range(1, rep_4_reco.dim()))) + \
+                    #           torch.sum((rep_5 - rep_5_reco) ** 2, dim=tuple(range(1, rep_5_reco.dim()))) + \
+                    #           torch.sum((rep_6 - rep_6_reco) ** 2, dim=tuple(range(1, rep_6_reco.dim()))) + \
+                    #           torch.sum((rep_7 - rep_7_reco) ** 2, dim=tuple(range(1, rep_7_reco.dim()))) + \
+                    #           torch.sum((rep_8 - rep_8_reco) ** 2, dim=tuple(range(1, rep_8_reco.dim()))) + \
+                    #           torch.sum((rep_9 - rep_9_reco) ** 2, dim=tuple(range(1, rep_9_reco.dim()))) + \
+                    #           torch.sum((rep_10) ** 2, dim=tuple(range(1, rep_10.dim())))
+                    score_nat = torch.mean((x - x_reco) ** 2, dim=tuple(range(1, x_reco.dim())))
+                    score_0 =torch.mean((rep_0 - rep_0_reco) ** 2, dim=tuple(range(1, rep_0_reco.dim())))
+                    score_1 =torch.mean((rep_1 - rep_1_reco) ** 2, dim=tuple(range(1, rep_1_reco.dim())))
+                    score_2 =torch.mean((rep_2 - rep_2_reco) ** 2, dim=tuple(range(1, rep_2_reco.dim())))
+                    score_3 =torch.mean((rep_3 - rep_3_reco) ** 2, dim=tuple(range(1, rep_3_reco.dim())))
+                    score_4 =torch.mean((rep_4 - rep_4_reco) ** 2, dim=tuple(range(1, rep_4_reco.dim())))
+                    score_5 =torch.mean((rep_5 - rep_5_reco) ** 2, dim=tuple(range(1, rep_5_reco.dim())))
+                    score_6 =torch.mean((rep_6 - rep_6_reco) ** 2, dim=tuple(range(1, rep_6_reco.dim())))
+                    score_7 =torch.mean((rep_7 - rep_7_reco) ** 2, dim=tuple(range(1, rep_7_reco.dim())))
+                    score_8 =torch.mean((rep_8 - rep_8_reco) ** 2, dim=tuple(range(1, rep_8_reco.dim())))
+                    score_9 =torch.mean((rep_9 - rep_9_reco) ** 2, dim=tuple(range(1, rep_9_reco.dim())))
+                    score_10 =torch.mean((rep_10) ** 2, dim=tuple(range(1, rep_10.dim())))
+                    scores = score_nat+score_0+score_1+ score_2+score_3+score_4+ score_5+score_6+score_7+ score_8+ score_9+ score_10
+                    loss = 256*256*torch.mean(scores)
+                    loss.backward()
+                    optimizer.step()
+                    #print(torch.mean(score_nat).item(),torch.mean(score_0).item(),torch.mean(score_1).item(), torch.mean(score_2).item(),torch.mean(score_3).item(),torch.mean(score_4).item(), torch.mean(score_5).item(),torch.mean(score_6).item(),torch.mean(score_7).item(), torch.mean(score_8).item(), torch.mean(score_9).item(),torch.mean(score_10).item())
                 elif self.ae_loss_type == 'object_HAE_ssim':
                     scores = -ssim_loss(x,x_reco) \
                              -ssim_loss(rep_0, rep_0_reco) \
@@ -105,7 +122,7 @@ class AETrainer(BaseTrainer):
                              -ssim_loss(rep_6, rep_6_reco) \
                              -ssim_loss(rep_7, rep_7_reco) \
                              -ssim_loss(rep_8, rep_8_reco)
-                elif self.ae_loss_type == 'texture_HAE' :
+                elif self.ae_loss_type == 'texture_HAE':
 
                     scores0 =  torch.sum((rep_0 - rep_0_reco) ** 2, dim=tuple(range(1, rep_0_reco.dim())))
                     scores1 = torch.sum((rep_1 - rep_1_reco) ** 2, dim=tuple(range(1, rep_1_reco.dim())))
@@ -118,17 +135,6 @@ class AETrainer(BaseTrainer):
                     scores8 = torch.sum((rep_8 - rep_8_reco) ** 2, dim=tuple(range(1, rep_8_reco.dim())))
                     scores9 = torch.sum((rep_9 - rep_9_reco) ** 2, dim=tuple(range(1, rep_9_reco.dim())))
                     scores10 = torch.sum((rep_10) ** 2, dim=tuple(range(1, rep_10.dim())))
-
-                    torch.mean(scores0).backward()
-                    torch.mean(scores1).backward()
-                    torch.mean(scores2).backward()
-                    torch.mean(scores3).backward()
-                    torch.mean(scores4).backward()
-                    torch.mean(scores5).backward()
-                    torch.mean(scores6).backward()
-                    torch.mean(scores7).backward()
-                    torch.mean(scores8).backward()
-                    torch.mean(scores9).backward()
                     torch.mean(scores10).backward()
                     loss = torch.mean(scores0+scores1+scores2+scores3+scores4+scores5+scores6+scores7+scores8+scores9+scores10)
                     #loss.backward()
@@ -175,7 +181,7 @@ class AETrainer(BaseTrainer):
 
             # log epoch statistics
             epoch_train_time = time.time() - epoch_start_time
-            logger.info('  Epoch {}/{}\t Time: {:.3f}\t Loss: {:.8f}'.format(epoch + 1, self.n_epochs, epoch_train_time, loss_epoch / n_batches))
+            logger.info('Epoch {}/{}\t Time: {:.3f}\t Loss: {:.8f}'.format(epoch + 1, self.n_epochs, epoch_train_time, loss_epoch / n_batches))
 
         pretrain_time = time.time() - start_time
         logger.info('Pretraining time: %.3f' % pretrain_time)
