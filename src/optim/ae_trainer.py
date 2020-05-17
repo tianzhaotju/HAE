@@ -36,6 +36,7 @@ class AETrainer(BaseTrainer):
         optimizer = optim.Adam(ae_net.parameters(), lr=self.lr, weight_decay=self.weight_decay,
                                amsgrad=self.optimizer_name == 'amsgrad')
 
+
         # Set learning rate scheduler
         scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=self.lr_milestones, gamma=0.1)
         ssim_loss = pytorch_ssim.SSIM(window_size=11)
@@ -44,7 +45,6 @@ class AETrainer(BaseTrainer):
         start_time = time.time()
         ae_net.train()
         for epoch in range(self.n_epochs):
-
 
             if epoch in self.lr_milestones:
                 logger.info('  LR scheduler: new learning rate is %g' % float(scheduler.get_lr()[0]))
@@ -62,8 +62,6 @@ class AETrainer(BaseTrainer):
 
                 # np.save('./log/object/'+str(dataset.normal_classes)+'/Images.npy', inputs.cpu().numpy()[-32:])
                 # exit(0)
-                #Zero the network parameter gradients
-                optimizer.zero_grad()
 
                 # Update network parameters via backpropagation: forward + backward + optimize
                 if self.ae_loss_type == 'object_HAE' or self.ae_loss_type == 'object_HAE_ssim':
@@ -106,8 +104,35 @@ class AETrainer(BaseTrainer):
                     score_8 =torch.mean((rep_8 - rep_8_reco) ** 2, dim=tuple(range(1, rep_8_reco.dim())))
                     score_9 =torch.mean((rep_9 - rep_9_reco) ** 2, dim=tuple(range(1, rep_9_reco.dim())))
                     score_10 =torch.mean((rep_10) ** 2, dim=tuple(range(1, rep_10.dim())))
-                    scores = score_nat+score_0+score_1+ score_2+score_3+score_4+ score_5+score_6+score_7+ score_8+ score_9+ score_10
+                    if epoch < 240:
+                        score_list = [score_nat, score_0, score_1, score_2, score_3, score_4, score_5, score_6, score_7,
+                                      score_8, score_9, score_10]
+                        a = int(self.n_epochs / 12)
+                        net_index = int(epoch / a)
+                        scores = score_list[net_index]
+                        requires_grad_true_list = [[0, 1, 24, 25], [2, 3, 26, 27], [4, 5, 28, 29], [6, 7, 30, 31],
+                                                   [8, 9, 32, 33], [10, 11, 34, 35], [12, 13, 36, 37], [14, 15, 38, 39],
+                                                   [16, 17, 40, 41], [18, 19, 42, 43], [20, 21, 23, 24], [20, 21]]
+                        for i, para in enumerate(ae_net.parameters()):
+                            para.requires_grad = False
+                            if i in requires_grad_true_list[net_index]:
+                                para.requires_grad = True
+                        # for i,para in enumerate(ae_net.parameters()):
+                        #     print(i,para.requires_grad)
+
+                        optimizer = optim.Adam(filter(lambda p: p.requires_grad, ae_net.parameters()), lr=self.lr,
+                                               weight_decay=self.weight_decay,
+                                               amsgrad=self.optimizer_name == 'amsgrad')
+                    else:
+                        for i, para in enumerate(ae_net.parameters()):
+                            para.requires_grad = True
+                        optimizer = optim.Adam(ae_net.parameters(), lr=self.lr,
+                                               weight_decay=self.weight_decay,
+                                               amsgrad=self.optimizer_name == 'amsgrad')
+                        scores = score_nat+score_0+score_1+ score_2+score_3+score_4+ score_5+score_6+score_7+ score_8+ score_9+ score_10
                     loss = 256*256*torch.mean(scores)
+                    # Zero the network parameter gradients
+                    optimizer.zero_grad()
                     loss.backward()
                     optimizer.step()
                     #print(torch.mean(score_nat).item(),torch.mean(score_0).item(),torch.mean(score_1).item(), torch.mean(score_2).item(),torch.mean(score_3).item(),torch.mean(score_4).item(), torch.mean(score_5).item(),torch.mean(score_6).item(),torch.mean(score_7).item(), torch.mean(score_8).item(), torch.mean(score_9).item(),torch.mean(score_10).item())
@@ -137,6 +162,8 @@ class AETrainer(BaseTrainer):
                     scores10 = torch.sum((rep_10) ** 2, dim=tuple(range(1, rep_10.dim())))
                     torch.mean(scores10).backward()
                     loss = torch.mean(scores0+scores1+scores2+scores3+scores4+scores5+scores6+scores7+scores8+scores9+scores10)
+                    # Zero the network parameter gradients
+                    optimizer.zero_grad()
                     #loss.backward()
                     optimizer.step()
                 elif self.ae_loss_type == 'texture_HAE_ssim':
@@ -166,11 +193,15 @@ class AETrainer(BaseTrainer):
                 elif self.ae_loss_type == 'ssim':
                     scores = -ssim_loss(inputs, outputs)
                     loss = torch.mean(scores)
+                    # Zero the network parameter gradients
+                    optimizer.zero_grad()
                     loss.backward()
                     optimizer.step()
                 else:
                     scores = torch.sum((outputs - inputs) ** 2, dim=tuple(range(1, outputs.dim())))
                     loss = torch.mean(scores)
+                    # Zero the network parameter gradients
+                    optimizer.zero_grad()
                     loss.backward()
                     optimizer.step()
 
