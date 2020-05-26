@@ -60,19 +60,25 @@ class TEXTURE_Dataset(TorchvisionDataset):
         #     min_value = min(min_value, min_max[e][0])
         #     max_value = max(min_value, min_max[e][1])
 
-        transform = transforms.Compose([transforms.ToTensor(),
-                                        transforms.Lambda(lambda x: global_contrast_normalization(x, scale='l1')),
-                                        transforms.Normalize([min_value] * 3, [max_value - min_value] * 3)])
+        # transform = transforms.Compose([transforms.ToTensor(),
+        #                                 transforms.Lambda(lambda x: global_contrast_normalization(x, scale='l1')),
+        #                                 transforms.Normalize([min_value] * 3, [max_value - min_value] * 3)])
 
 
 
-        transform_train = transforms.Compose([transforms.ToTensor(),
-                                        transforms.Normalize(mean[self.normal_classes], std[self.normal_classes]),
-                                        ])
+        # transform_train = transforms.Compose([transforms.ToTensor(),
+        #                                 transforms.Normalize(mean[self.normal_classes], std[self.normal_classes]),
+        #                                 ])
+
+        transform_train = transforms.Compose([transforms.ToTensor()])
+
+        # transform_test = transforms.Compose([transforms.Resize(512),
+        #                                       transforms.ToTensor(),
+        #                                       transforms.Normalize(mean[self.normal_classes], std[self.normal_classes])])
 
         transform_test = transforms.Compose([transforms.Resize(512),
-                                              transforms.ToTensor(),
-                                              transforms.Normalize(mean[self.normal_classes], std[self.normal_classes])])
+                                             transforms.ToTensor()])
+
         self.train_set = ImageFolder(root=self.root +'/train',transform =transform_train )
         self.test_set = ImageFolder(root=self.root + '/test', transform=transform_test)
 

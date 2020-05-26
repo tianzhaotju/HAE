@@ -1,7 +1,7 @@
 from .mnist_LeNet import MNIST_LeNet, MNIST_LeNet_Autoencoder
 from .cifar10_LeNet import CIFAR10_LeNet, CIFAR10_LeNet_Autoencoder
 from .cifar10_LeNet_elu import CIFAR10_LeNet_ELU, CIFAR10_LeNet_ELU_Autoencoder
-from .object import OBJECT,OBJECT_Autoencoder
+from .object import OBJECT, OBJECT_Autoencoder
 from .texture import TEXTURE, TEXTURE_Autoencoder
 from .mnist_motivation import MNIST_Motivation,MNIST_Motivation_Autoencoder
 from .texture_hae import TEXTURE_HAE, TEXTURE_HAE_Autoencoder
@@ -63,19 +63,21 @@ def build_autoencoder(net_name):
         ae_net = CIFAR10_LeNet_ELU_Autoencoder()
 
     if net_name == 'object':
-        ae_net = OBJECT_Autoencoder()
+        #ae_net = OBJECT_Autoencoder()
+        ae_net = OBJECT_HAE()
 
     if net_name == 'texture':
         ae_net = TEXTURE_Autoencoder()
 
     if net_name == 'mnist_motivation':
         ae_net = MNIST_Motivation_Autoencoder()
+
     if net_name == 'mnist_hae':
         ae_net = MNIST_HAE_Autoencoder()
     if net_name == 'object_hae':
-        ae_net = OBJECT_HAE_Autoencoder()
+        ae_net = OBJECT_HAE()
     if net_name == 'texture_hae':
-        ae_net = TEXTURE_HAE_Autoencoder()
+        ae_net = TEXTURE_HAE()
     if net_name == 'mnist_hae':
         ae_net = MNIST_HAE_Autoencoder()
 

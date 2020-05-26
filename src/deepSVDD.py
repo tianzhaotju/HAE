@@ -87,15 +87,16 @@ class DeepSVDD(object):
 
     def pretrain(self, dataset: BaseADDataset, optimizer_name: str = 'adam', lr: float = 0.001, n_epochs: int = 100,
                  lr_milestones: tuple = (), batch_size: int = 128, weight_decay: float = 1e-6, device: str = 'cuda',
-                 n_jobs_dataloader: int = 0, dataset_name: str = 'mnist', ae_loss_type: str = 'l2', ae_only: bool = False):
+                 n_jobs_dataloader: int = 0, dataset_name: str = 'mnist', ae_loss_type: str = 'l2', ae_only: bool = False, model_save_path:str = ''):
         """Pretrains the weights for the Deep SVDD network \phi via autoencoder."""
-
         self.ae_net = build_autoencoder(self.net_name)
         self.ae_optimizer_name = optimizer_name
         self.ae_trainer = AETrainer(optimizer_name, lr=lr, n_epochs=n_epochs, lr_milestones=lr_milestones,
                                     batch_size=batch_size, weight_decay=weight_decay, device=device,
                                     n_jobs_dataloader=n_jobs_dataloader, dataset_name = dataset_name, ae_loss_type=ae_loss_type, ae_only=ae_only  )
         self.ae_net = self.ae_trainer.train(dataset, self.ae_net)
+        if model_save_path != '':
+            torch.save(self.ae_net,model_save_path)
         self.init_network_weights_from_pretraining()
         self.ae_trainer.test(dataset, self.ae_net, self.net)
         # Get results
@@ -103,6 +104,21 @@ class DeepSVDD(object):
         # self.results['ae_test_time'] = self.ae_trainer.test_time
         self.results['ae_test_scores'] = self.ae_trainer.test_scores
 
+    def load_test(self, dataset: BaseADDataset, optimizer_name: str = 'adam', lr: float = 0.001, n_epochs: int = 100,
+                 lr_milestones: tuple = (), batch_size: int = 128, weight_decay: float = 1e-6, device: str = 'cuda',
+                 n_jobs_dataloader: int = 0, dataset_name: str = 'mnist', ae_loss_type: str = 'l2', ae_only: bool = False, model_save_path:str = ''):
+        self.ae_optimizer_name = optimizer_name
+        self.ae_trainer = AETrainer(optimizer_name, lr=lr, n_epochs=n_epochs, lr_milestones=lr_milestones,
+                                    batch_size=batch_size, weight_decay=weight_decay, device=device,
+                                    n_jobs_dataloader=n_jobs_dataloader, dataset_name=dataset_name,
+                                    ae_loss_type=ae_loss_type, ae_only=ae_only)
+        self.ae_net = torch.load(model_save_path)
+        self.init_network_weights_from_pretraining()
+        self.ae_trainer.test(dataset, self.ae_net, self.net)
+        # Get results
+        # self.results['ae_test_auc'] = self.ae_trainer.test_auc
+        # self.results['ae_test_time'] = self.ae_trainer.test_time
+        self.results['ae_test_scores'] = self.ae_trainer.test_scores
 
     def init_network_weights_from_pretraining(self):
         """Initialize the Deep SVDD network weights from the encoder weights of the pretraining autoencoder."""

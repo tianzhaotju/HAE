@@ -27,7 +27,7 @@ import torchvision.transforms as transforms
 @click.option('--objective', type=click.Choice(['one-class', 'soft-boundary', 'deep-GMM', 'hybrid']), default='one-class',
               help='Specify Deep SVDD objective ("one-class" or "soft-boundary").')
 @click.option('--nu', type=float, default=0.1, help='Deep SVDD hyperparameter nu (must be 0 < nu <= 1).')
-@click.option('--device', type=str, default='cuda', help='Computation device to use ("cpu", "cuda", "cuda:2", etc.).')
+@click.option('--device', type=str, default='cuda:0', help='Computation device to use ("cpu", "cuda", "cuda:2", etc.).')
 @click.option('--seed', type=int, default=-1, help='Set seed. If -1, use randomization.')
 @click.option('--optimizer_name', type=click.Choice(['adam', 'amsgrad']), default='adam',
               help='Name of the optimizer to use for Deep SVDD network training.')
@@ -59,11 +59,13 @@ import torchvision.transforms as transforms
               help='Specify only train auto-encoder')
 @click.option('--normal_class', type=int, default=0,
               help='Specify the normal class of the dataset (all other classes are considered anomalous).')
+@click.option('--ae_test_only', type=bool, default=False,
+              help='Specify only load model and test auto-encoder.')
 
 
 def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, objective, nu, device, seed,
          optimizer_name, lr, n_epochs, lr_milestone, batch_size, weight_decay, pretrain, ae_optimizer_name, ae_lr,
-         ae_n_epochs, ae_lr_milestone, ae_batch_size, ae_weight_decay, n_jobs_dataloader, ae_loss_type, ae_only ,normal_class):
+         ae_n_epochs, ae_lr_milestone, ae_batch_size, ae_weight_decay, n_jobs_dataloader, ae_loss_type, ae_only ,normal_class,ae_test_only):
     """
     Deep SVDD, a fully deep method for anomaly detection.
 
@@ -176,19 +178,36 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, ob
         logger.info('Pretraining weight decay: %g' % cfg.settings['ae_weight_decay'])
 
         # Pretrain model on dataset (via autoencoder)
+        model_save_path = './models/'+dataset_name+'/'+str(normal_class)+'_'+str(n_epochs)+ae_loss_type+'.pth'
 
-        deep_SVDD.pretrain(dataset,
-                           optimizer_name=cfg.settings['ae_optimizer_name'],
-                           lr=cfg.settings['ae_lr'],
-                           n_epochs=cfg.settings['ae_n_epochs'],
-                           lr_milestones=cfg.settings['ae_lr_milestone'],
-                           batch_size=cfg.settings['ae_batch_size'],
-                           weight_decay=cfg.settings['ae_weight_decay'],
-                           device=device,
-                           n_jobs_dataloader=n_jobs_dataloader,
-                           dataset_name = dataset_name,
-                           ae_loss_type = ae_loss_type,
-                           ae_only = ae_only)
+        if ae_test_only == False:
+            deep_SVDD.pretrain(dataset,
+                               optimizer_name=cfg.settings['ae_optimizer_name'],
+                               lr=cfg.settings['ae_lr'],
+                               n_epochs=cfg.settings['ae_n_epochs'],
+                               lr_milestones=cfg.settings['ae_lr_milestone'],
+                               batch_size=cfg.settings['ae_batch_size'],
+                               weight_decay=cfg.settings['ae_weight_decay'],
+                               device=device,
+                               n_jobs_dataloader=n_jobs_dataloader,
+                               dataset_name = dataset_name,
+                               ae_loss_type = ae_loss_type,
+                               ae_only = ae_only,
+                               model_save_path=model_save_path)
+        else:
+            deep_SVDD.load_test(dataset,
+                                optimizer_name=cfg.settings['ae_optimizer_name'],
+                                lr=cfg.settings['ae_lr'],
+                                n_epochs=cfg.settings['ae_n_epochs'],
+                                lr_milestones=cfg.settings['ae_lr_milestone'],
+                                batch_size=cfg.settings['ae_batch_size'],
+                                weight_decay=cfg.settings['ae_weight_decay'],
+                                device=device,
+                                n_jobs_dataloader=n_jobs_dataloader,
+                                dataset_name=dataset_name,
+                                ae_loss_type=ae_loss_type,
+                                ae_only=ae_only,
+                                model_save_path=model_save_path)
 
         # Plot most anomalous and most normal (within-class) test samples
         exit(0)
@@ -299,8 +318,10 @@ if __name__ == '__main__':
 
 #HAE script
 # 5-14
-#python src/main.py object object_hae ./log/object ./data/Mvtec/ --objective deep-GMM --lr 0.0001 --n_epochs 1 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --seed -1 --ae_lr 0.0001 --ae_n_epochs 30 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --ae_loss_type 'object_HAE' --ae_only True --normal_class 11
+#python src/main.py object object_hae ./log/object ./data/Mvtec/ --objective deep-GMM --lr 0.0001 --n_epochs 1 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --seed -1 --ae_lr 0.0001 --ae_n_epochs 30 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --ae_loss_type 'object_HAE' --ae_only True --normal_class 7
 # 0-4
 #python src/main.py texture texture_hae ./log/texture ./data/Mvtec/ --objective deep-GMM --lr 0.0001 --n_epochs 1 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --seed -1 --ae_lr 0.0001 --ae_n_epochs 1 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --ae_loss_type 'texture_HAE' --ae_only True --normal_class 0
 
 #python src/main.py mnist mnist_hae ./log/mnist ./data --objective deep-GMM --lr 0.0001 --n_epochs 1 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --seed -1 --ae_lr 0.0001 --ae_n_epochs 30 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --ae_loss_type 'mnist_HAE' --ae_only True --normal_class 1
+
+# python src/main.py object object_hae ./log/object ./data/Mvtec/ --objective deep-GMM --lr 0.0001 --n_epochs 1 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --seed -1 --ae_lr 0.0001 --ae_lr_milestone 50 --ae_batch_size 32 --ae_weight_decay 0.5e-3 --ae_loss_type 'object_HAE_ssim' --ae_only True --normal_class 8 --ae_n_epochs 1 --device cuda:0 --ae_test_only False
