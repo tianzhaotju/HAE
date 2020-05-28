@@ -178,7 +178,7 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, ob
         logger.info('Pretraining weight decay: %g' % cfg.settings['ae_weight_decay'])
 
         # Pretrain model on dataset (via autoencoder)
-        model_save_path = './models/'+dataset_name+'/'+str(normal_class)+'_'+str(n_epochs)+ae_loss_type+'.pth'
+        model_save_path = './models/'+dataset_name+'/'+str(normal_class)+'_'+str(ae_n_epochs)+'_'+ae_loss_type+'.pth'
 
         if ae_test_only == False:
             deep_SVDD.pretrain(dataset,

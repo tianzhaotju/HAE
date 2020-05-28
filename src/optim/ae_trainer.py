@@ -476,20 +476,34 @@ class AETrainer(BaseTrainer):
                         for j in range(0, h, 128):
                             input_x = inputs[:,:,i:i+128,j:j+128]
                             rep_0_reco, rep_1_reco, rep_2_reco, rep_3_reco, rep_4_reco, rep_5_reco, rep_6_reco, rep_7_reco, rep_8_reco, rep_9_reco = ae_net(input_x)
-                            rep_0_list.append(rep_0_reco)
-                            rep_1_list.append(rep_1_reco)
-                            rep_2_list.append(rep_2_reco)
-                            rep_3_list.append(rep_3_reco)
-                            rep_4_list.append(rep_4_reco)
-                            rep_5_list.append(rep_5_reco)
-                            rep_6_list.append(rep_6_reco)
-                            rep_7_list.append(rep_7_reco)
-                            rep_8_list.append(rep_8_reco)
-                            rep_9_list.append(rep_9_reco)
-                            input_x_list.append(input_x)
+                            rep_0_list.append(rep_0_reco.cpu().numpy())
+                            rep_1_list.append(rep_1_reco.cpu().numpy())
+                            rep_2_list.append(rep_2_reco.cpu().numpy())
+                            rep_3_list.append(rep_3_reco.cpu().numpy())
+                            rep_4_list.append(rep_4_reco.cpu().numpy())
+                            rep_5_list.append(rep_5_reco.cpu().numpy())
+                            rep_6_list.append(rep_6_reco.cpu().numpy())
+                            rep_7_list.append(rep_7_reco.cpu().numpy())
+                            rep_8_list.append(rep_8_reco.cpu().numpy())
+                            rep_9_list.append(rep_9_reco.cpu().numpy())
+                            input_x_list.append(input_x.cpu().numpy())
 
-                    rep_0 = torch.cat(rep_0_list, 0);rep_1 = torch.cat(rep_1_list, 0);rep_2 = torch.cat(rep_2_list, 0);rep_3 = torch.cat(rep_3_list, 0);rep_4 = torch.cat(rep_4_list, 0);rep_5 = torch.cat(rep_5_list, 0);rep_6 = torch.cat(rep_6_list, 0);rep_7 = torch.cat(rep_7_list, 0);rep_8 = torch.cat(rep_8_list, 0);rep_9 = torch.cat(rep_9_list, 0);input_x_list = torch.cat(input_x_list,0)
+                    # 16,32,3,128,128
+                    for i in range(np.shape(input_x_list)[1]):
+                        for j in range(np.shape(input_x_list)[0]):
+                            total_inputs.append(input_x_list[j][i])
+                            total_rec[0].append(rep_0_list[j][i])
+                            total_rec[1].append(rep_1_list[j][i])
+                            total_rec[2].append(rep_2_list[j][i])
+                            total_rec[3].append(rep_3_list[j][i])
+                            total_rec[4].append(rep_4_list[j][i])
+                            total_rec[5].append(rep_5_list[j][i])
+                            total_rec[6].append(rep_6_list[j][i])
+                            total_rec[7].append(rep_7_list[j][i])
+                            total_rec[8].append(rep_8_list[j][i])
+                            total_rec[9].append(rep_9_list[j][i])
 
+                    continue
                 elif self.ae_loss_type == 'mnist_HAE' or self.ae_loss_type == 'mnist_HAE_ssim':
                     x, x_reco, rep_0, rep_0_reco, rep_1, rep_1_reco, rep_2, rep_2_reco, rep_3, rep_3_reco, rep_4= ae_net(inputs)
 
@@ -574,39 +588,29 @@ class AETrainer(BaseTrainer):
                     dist, ind = tree.query(test_x, k=10)
                     avg_dist = np.mean(dist,1)
                 elif self.ae_loss_type == 'texture_HAE':
-                    for i in input_x_list.cpu().numpy():
-                        total_inputs.append(i)
-                    for i in rep_0.cpu().numpy():
-                        total_rec[0].append(i)
-                    for i in rep_1.cpu().numpy():
-                        total_rec[1].append(i)
-                    for i in rep_2.cpu().numpy():
-                        total_rec[2].append(i)
-                    for i in rep_3.cpu().numpy():
-                        total_rec[3].append(i)
-                    for i in rep_4.cpu().numpy():
-                        total_rec[4].append(i)
-                    for i in rep_5.cpu().numpy():
-                        total_rec[5].append(i)
-                    for i in rep_6.cpu().numpy():
-                        total_rec[6].append(i)
-                    for i in rep_7.cpu().numpy():
-                        total_rec[7].append(i)
-                    for i in rep_8.cpu().numpy():
-                        total_rec[8].append(i)
-                    for i in rep_9.cpu().numpy():
-                        total_rec[9].append(i)
+                    input_x_list = torch.from_numpy(np.array(input_x_list))
+                    rep_0_list = torch.from_numpy(np.array(rep_0_list))
+                    rep_1_list = torch.from_numpy(np.array(rep_1_list))
+                    rep_2_list = torch.from_numpy(np.array(rep_2_list))
+                    rep_3_list = torch.from_numpy(np.array(rep_3_list))
+                    rep_4_list = torch.from_numpy(np.array(rep_4_list))
+                    rep_5_list = torch.from_numpy(np.array(rep_5_list))
+                    rep_6_list = torch.from_numpy(np.array(rep_6_list))
+                    rep_7_list = torch.from_numpy(np.array(rep_7_list))
+                    rep_8_list = torch.from_numpy(np.array(rep_8_list))
+                    rep_9_list = torch.from_numpy(np.array(rep_9_list))
+
                     temp = []
-                    temp.append(torch.sum((input_x_list - rep_0) ** 2, dim=tuple(range(1, rep_0.dim()))).cpu().numpy())
-                    temp.append(torch.sum((input_x_list - rep_1) ** 2, dim=tuple(range(1, rep_1.dim()))).cpu().numpy())
-                    temp.append(torch.sum((input_x_list - rep_2) ** 2, dim=tuple(range(1, rep_2.dim()))).cpu().numpy())
-                    temp.append(torch.sum((input_x_list - rep_3) ** 2, dim=tuple(range(1, rep_3.dim()))).cpu().numpy())
-                    temp.append(torch.sum((input_x_list - rep_4) ** 2, dim=tuple(range(1, rep_4.dim()))).cpu().numpy())
-                    temp.append(torch.sum((input_x_list - rep_5) ** 2, dim=tuple(range(1, rep_5.dim()))).cpu().numpy())
-                    temp.append(torch.sum((input_x_list - rep_6) ** 2, dim=tuple(range(1, rep_6.dim()))).cpu().numpy())
-                    temp.append(torch.sum((input_x_list - rep_7) ** 2, dim=tuple(range(1, rep_7.dim()))).cpu().numpy())
-                    temp.append(torch.sum((input_x_list - rep_8) ** 2, dim=tuple(range(1, rep_8.dim()))).cpu().numpy())
-                    temp.append(torch.sum((input_x_list - rep_9) ** 2, dim=tuple(range(1, rep_9.dim()))).cpu().numpy())
+                    temp.append(torch.sum((input_x_list - rep_0_list) ** 2, dim=tuple(range(1, rep_0.dim()))).cpu().numpy())
+                    temp.append(torch.sum((input_x_list - rep_1_list) ** 2, dim=tuple(range(1, rep_1.dim()))).cpu().numpy())
+                    temp.append(torch.sum((input_x_list - rep_2_list) ** 2, dim=tuple(range(1, rep_2.dim()))).cpu().numpy())
+                    temp.append(torch.sum((input_x_list - rep_3_list) ** 2, dim=tuple(range(1, rep_3.dim()))).cpu().numpy())
+                    temp.append(torch.sum((input_x_list - rep_4_list) ** 2, dim=tuple(range(1, rep_4.dim()))).cpu().numpy())
+                    temp.append(torch.sum((input_x_list - rep_5_list) ** 2, dim=tuple(range(1, rep_5.dim()))).cpu().numpy())
+                    temp.append(torch.sum((input_x_list - rep_6_list) ** 2, dim=tuple(range(1, rep_6.dim()))).cpu().numpy())
+                    temp.append(torch.sum((input_x_list - rep_7_list) ** 2, dim=tuple(range(1, rep_7.dim()))).cpu().numpy())
+                    temp.append(torch.sum((input_x_list - rep_8_list) ** 2, dim=tuple(range(1, rep_8.dim()))).cpu().numpy())
+                    temp.append(torch.sum((input_x_list - rep_9_list) ** 2, dim=tuple(range(1, rep_9.dim()))).cpu().numpy())
                     temp = np.array(temp)
                     test_x = []
                     for i in range(len(temp[0])):
