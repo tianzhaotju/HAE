@@ -49,7 +49,6 @@ class MNIST_Motivation(BaseNet):
         self.debn3 = nn.BatchNorm2d(16, eps=1e-04, affine=False)
         self.deconv4 = nn.ConvTranspose2d(16, 16, 4, stride=2, padding=1, bias=True)
         self.debn4 = nn.BatchNorm2d(16, eps=1e-04, affine=False)
-
         self.deconv5 = nn.ConvTranspose2d(9, 16, 3, stride=1, padding=0, bias=True)
         self.debn5 = nn.BatchNorm2d(16, eps=1e-04, affine=False)
 

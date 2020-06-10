@@ -63,11 +63,16 @@ class OBJECT_Dataset(TorchvisionDataset):
         #                                       transforms.Normalize(mean[self.normal_classes], std[self.normal_classes]),
         #                                      transforms.Normalize([-1] * 3, [2] * 3)])
 
-        transform_train = transforms.Compose([transforms.ToTensor()])
+        transform_train = transforms.Compose([transforms.Resize(256),
+                                              transforms.ToTensor()])
 
         transform_test = transforms.Compose([transforms.Resize(256),
                                              transforms.ToTensor()])
         self.train_set = ImageFolder(root=self.root +'/train',transform =transform_train )
+        # for i in range(len(self.train_set.imgs)):
+        #     if np.shape( self.train_set[i][0].numpy()) != (3,256,256):
+        #        print(np.shape( self.train_set[i][0].numpy()))
+        # exit()
         self.test_set = ImageFolder(root=self.root + '/test', transform=transform_test)
         self.test_data = []
         for i in range(len(self.test_set.imgs)):

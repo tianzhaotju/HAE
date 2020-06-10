@@ -13,7 +13,9 @@ def plot_images_grid(x: torch.tensor, export_img, title: str = '', nrow=8, paddi
     # x.shape == torch.Size([32, 3, 256, 256])
     grid = make_grid(x, nrow=nrow, padding=padding, normalize=normalize, pad_value=pad_value)
     npgrid = grid.cpu().numpy()
-
+    print(grid.shape)
+    print(np.shape(npgrid))
+    print(npgrid)
     plt.imshow(np.transpose(npgrid, (1, 2, 0)), interpolation='nearest')
 
     ax = plt.gca()

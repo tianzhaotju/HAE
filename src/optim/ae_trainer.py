@@ -5,13 +5,16 @@ from sklearn.metrics import roc_auc_score
 from utils.pytorch_ssim import pytorch_ssim
 from utils.plot_rescons import plot_reconstruction
 from sklearn.neighbors import KernelDensity, KDTree
-
-
+import random
+import torch.nn as nn
+import matplotlib.pyplot as plt
 import logging
 import time
 import torch
 import torch.optim as optim
 import numpy as np
+import copy
+from torchvision.transforms import Resize
 
 
 class AETrainer(BaseTrainer):
@@ -44,6 +47,41 @@ class AETrainer(BaseTrainer):
         logger.info('Starting pretraining...')
         start_time = time.time()
         ae_net.train()
+        inputs_set = []
+        naive_inputs_set = []
+
+
+        for data in train_loader:
+            if self.dataset_name == 'object' or self.dataset_name == 'texture':
+                inputs, _, _ = data
+            else:
+                inputs, _, _ = data
+
+            #inputs = 1 - inputs
+
+            naive_inputs = copy.deepcopy(inputs)
+            if self.ae_loss_type == 'texture_HAE':
+                for i in range(np.shape(inputs)[0]):
+                    for e in range(1):
+                        # pixel = random.randint(0, 1)
+                        h = random.randint(30, 50)
+                        l = random.randint(30, 50)
+                        x = random.randint(0, 128 - h)
+                        y = random.randint(0, 128 - l)
+                        pixel = np.random.random([3, h, l])
+                        inputs[i][:,x:x+h,y:y+l] = torch.from_numpy(pixel)
+
+            # for i in range(np.shape(inputs)[0]):
+            #     plt.imshow(inputs[i].numpy().transpose([1,2,0]))
+            #     plt.show()
+            #     plt.imshow(naive_inputs[i].numpy().transpose([1,2,0]))
+            #     plt.show()
+            # exit()
+            inputs = inputs.to(self.device)
+            naive_inputs = naive_inputs.to(self.device)
+            inputs_set.append(inputs)
+            naive_inputs_set.append(naive_inputs)
+
         for epoch in range(self.n_epochs):
 
             if epoch in self.lr_milestones:
@@ -52,13 +90,10 @@ class AETrainer(BaseTrainer):
             loss_epoch = 0.0
             n_batches = 0
             epoch_start_time = time.time()
-            for data in train_loader:
-                if self.dataset_name == 'object' or self.dataset_name =='texture':
-                    inputs, _, _ = data
-                else:
-                    inputs, _, _ = data
 
-                inputs = inputs.to(self.device)
+            for i in range(len(inputs_set)):
+                inputs = inputs_set[i]
+                naive_inputs = naive_inputs_set[i]
 
                 # Update network parameters via backpropagation: forward + backward + optimize
                 if self.ae_loss_type == 'object_HAE' or self.ae_loss_type == 'object_HAE_ssim':
@@ -95,10 +130,10 @@ class AETrainer(BaseTrainer):
                     score_7 =torch.sum((rep_6_reco - rep_7_reco) ** 2, dim=tuple(range(1, rep_7_reco.dim())))
                     score_8 =torch.sum((rep_7_reco - rep_8_reco) ** 2, dim=tuple(range(1, rep_8_reco.dim())))
                     score_9 =torch.sum((rep_8_reco - rep_9_reco) ** 2, dim=tuple(range(1, rep_9_reco.dim())))
-                    if epoch < 0:
+                    if epoch < 10000:
                         score_list = [score_nat, score_0, score_1, score_2, score_3, score_4, score_5, score_6, score_7,
                                       score_8, score_9]
-                        a = int(self.n_epochs / 12)
+                        a = int(self.n_epochs / 11)
                         net_index = int(epoch / a)
                         scores = score_list[net_index]
                         requires_grad_true_list = [[0, 1, 24, 25], [2, 3, 26, 27], [4, 5, 28, 29], [6, 7, 30, 31],
@@ -146,7 +181,7 @@ class AETrainer(BaseTrainer):
                     loss.backward()
                     optimizer.step()
                 elif self.ae_loss_type == 'texture_HAE':
-                    score_0 = torch.sum((inputs - rep_0_reco) ** 2, dim=tuple(range(1, rep_0_reco.dim())))
+                    score_0 = torch.sum((naive_inputs - rep_0_reco) ** 2, dim=tuple(range(1, rep_0_reco.dim())))
                     score_1 = torch.sum((rep_0_reco - rep_1_reco) ** 2, dim=tuple(range(1, rep_1_reco.dim())))
                     score_2 = torch.sum((rep_1_reco - rep_2_reco) ** 2, dim=tuple(range(1, rep_2_reco.dim())))
                     score_3 = torch.sum((rep_2_reco - rep_3_reco) ** 2, dim=tuple(range(1, rep_3_reco.dim())))
@@ -157,16 +192,16 @@ class AETrainer(BaseTrainer):
                     score_8 = torch.sum((rep_7_reco - rep_8_reco) ** 2, dim=tuple(range(1, rep_8_reco.dim())))
                     score_9 = torch.sum((rep_8_reco - rep_9_reco) ** 2, dim=tuple(range(1, rep_9_reco.dim())))
 
-                    # score_0 = torch.sum((inputs - rep_0_reco) ** 2, dim=tuple(range(1, rep_0_reco.dim())))
-                    # score_1 = torch.sum((inputs - rep_1_reco) ** 2, dim=tuple(range(1, rep_1_reco.dim())))
-                    # score_2 = torch.sum((inputs - rep_2_reco) ** 2, dim=tuple(range(1, rep_2_reco.dim())))
-                    # score_3 = torch.sum((inputs - rep_3_reco) ** 2, dim=tuple(range(1, rep_3_reco.dim())))
-                    # score_4 = torch.sum((inputs - rep_4_reco) ** 2, dim=tuple(range(1, rep_4_reco.dim())))
-                    # score_5 = torch.sum((inputs - rep_5_reco) ** 2, dim=tuple(range(1, rep_5_reco.dim())))
-                    # score_6 = torch.sum((inputs - rep_6_reco) ** 2, dim=tuple(range(1, rep_6_reco.dim())))
-                    # score_7 = torch.sum((inputs - rep_7_reco) ** 2, dim=tuple(range(1, rep_7_reco.dim())))
-                    # score_8 = torch.sum((inputs - rep_8_reco) ** 2, dim=tuple(range(1, rep_8_reco.dim())))
-                    # score_9 = torch.sum((inputs - rep_9_reco) ** 2, dim=tuple(range(1, rep_9_reco.dim())))
+                    # score_0 = torch.sum((naive_inputs - rep_0_reco) ** 2, dim=tuple(range(1, rep_0_reco.dim())))
+                    # score_1 = torch.sum((naive_inputs - rep_1_reco) ** 2, dim=tuple(range(1, rep_1_reco.dim())))
+                    # score_2 = torch.sum((naive_inputs - rep_2_reco) ** 2, dim=tuple(range(1, rep_2_reco.dim())))
+                    # score_3 = torch.sum((naive_inputs - rep_3_reco) ** 2, dim=tuple(range(1, rep_3_reco.dim())))
+                    # score_4 = torch.sum((naive_inputs - rep_4_reco) ** 2, dim=tuple(range(1, rep_4_reco.dim())))
+                    # score_5 = torch.sum((naive_inputs - rep_5_reco) ** 2, dim=tuple(range(1, rep_5_reco.dim())))
+                    # score_6 = torch.sum((naive_inputs - rep_6_reco) ** 2, dim=tuple(range(1, rep_6_reco.dim())))
+                    # score_7 = torch.sum((naive_inputs - rep_7_reco) ** 2, dim=tuple(range(1, rep_7_reco.dim())))
+                    # score_8 = torch.sum((naive_inputs - rep_8_reco) ** 2, dim=tuple(range(1, rep_8_reco.dim())))
+                    # score_9 = torch.sum((naive_inputs - rep_9_reco) ** 2, dim=tuple(range(1, rep_9_reco.dim())))
                     if epoch < 0:
                         score_list = [score_0, score_1, score_2, score_3, score_4, score_5, score_6, score_7,
                                       score_8, score_9]
@@ -198,10 +233,8 @@ class AETrainer(BaseTrainer):
                     optimizer.zero_grad()
                     loss.backward()
                     optimizer.step()
-
                 elif self.ae_loss_type == 'texture_HAE_ssim':
-
-                    score_0 = -ssim_loss(x_reco, rep_0_reco)
+                    score_0 = -ssim_loss(naive_inputs, rep_0_reco)
                     score_1 = -ssim_loss(rep_0_reco, rep_1_reco)
                     score_2 = -ssim_loss(rep_1_reco, rep_2_reco)
                     score_3 = -ssim_loss(rep_2_reco, rep_3_reco)
@@ -283,37 +316,85 @@ class AETrainer(BaseTrainer):
 
         with torch.no_grad():
             errors = []
+            total_inputs_train = []
+            if self.dataset_name == 'object':
+                total_rec_train = [[], [], [], [], [], [], [], [], [], [], []]
+            elif self.dataset_name == 'texture':
+                total_rec_train = [[], [], [], [], [], [], [], [], [], []]
+
             for data in train_loader:
                 if self.dataset_name == 'object' or self.dataset_name == 'texture':
                     inputs, labels, idx = data
                 else:
                     inputs, labels, idx = data
 
+                #inputs = 1 - inputs
+
                 inputs = inputs.to(self.device)
+                for i in inputs.cpu().numpy():
+                    total_inputs_train.append(i)
+
+
+
 
                 if self.ae_loss_type == 'object_HAE' or self.ae_loss_type == 'object_HAE_ssim':
                     x_reco, rep_0_reco, rep_1_reco, rep_2_reco, rep_3_reco, rep_4_reco, \
                     rep_5_reco, rep_6_reco, rep_7_reco, rep_8_reco, rep_9_reco = ae_net(inputs)
+                    for i in x_reco.cpu().numpy():
+                        total_rec_train[0].append(i)
+                    for i in rep_0_reco.cpu().numpy():
+                        total_rec_train[1].append(i)
+                    for i in rep_1_reco.cpu().numpy():
+                        total_rec_train[2].append(i)
+                    for i in rep_2_reco.cpu().numpy():
+                        total_rec_train[3].append(i)
+                    for i in rep_3_reco.cpu().numpy():
+                        total_rec_train[4].append(i)
+                    for i in rep_4_reco.cpu().numpy():
+                        total_rec_train[5].append(i)
+                    for i in rep_5_reco.cpu().numpy():
+                        total_rec_train[6].append(i)
+                    for i in rep_6_reco.cpu().numpy():
+                        total_rec_train[7].append(i)
+                    for i in rep_7_reco.cpu().numpy():
+                        total_rec_train[8].append(i)
+                    for i in rep_8_reco.cpu().numpy():
+                        total_rec_train[9].append(i)
+                    for i in rep_9_reco.cpu().numpy():
+                        total_rec_train[10].append(i)
                 elif self.ae_loss_type == 'texture_HAE' or self.ae_loss_type == 'texture_HAE_ssim':
                     rep_0_reco, rep_1_reco, rep_2_reco, rep_3_reco, rep_4_reco, \
                     rep_5_reco, rep_6_reco, rep_7_reco, rep_8_reco, rep_9_reco = ae_net(inputs)
                     batchsize, chanle, l, h = inputs.size()
                     rep_0_list =[]; rep_0_reco_list =[]; rep_1_list =[] ;rep_1_reco_list =[]; rep_2_list =[]; rep_2_reco_list =[]; rep_3_list =[]; rep_3_reco_list =[]; rep_4_list =[]; rep_4_reco_list =[]; \
-                    rep_5_list =[]; rep_5_reco_list =[]; rep_6_list =[]; rep_6_reco_list =[]; rep_7_list =[]; rep_7_reco_list =[]; rep_8_list =[]; rep_8_reco_list =[]; rep_9_list =[]; rep_9_reco_list =[];rep_10_list =[]
-                    for i in range(0,l,128):
-                        for j in range(0,h,128):
-                            rep_0_reco, rep_1_reco, rep_2_reco, rep_3_reco, rep_4_reco, \
-                            rep_5_reco, rep_6_reco, rep_7_reco, rep_8_reco, rep_9_reco = ae_net(inputs)
-                            rep_0_list.append(rep_0_reco)
-                            rep_1_list.append(rep_1_reco)
-                            rep_2_list.append(rep_2_reco)
-                            rep_3_list.append(rep_3_reco)
-                            rep_4_list.append(rep_4_reco)
-                            rep_5_list.append(rep_5_reco)
-                            rep_6_list.append(rep_6_reco)
-                            rep_7_list.append(rep_7_reco)
-                            rep_8_list.append(rep_8_reco)
-                            rep_9_list.append(rep_9_reco)
+                    rep_5_list =[]; rep_5_reco_list =[]; rep_6_list =[]; rep_6_reco_list =[]; rep_7_list =[]; rep_7_reco_list =[]; rep_8_list =[]; rep_8_reco_list =[]; rep_9_list =[]; rep_9_reco_list =[];rep_10_list =[] ;input_x_list=[]
+
+                    rep_0_reco, rep_1_reco, rep_2_reco, rep_3_reco, rep_4_reco, \
+                    rep_5_reco, rep_6_reco, rep_7_reco, rep_8_reco, rep_9_reco = ae_net(inputs)
+                    rep_0_list.append(rep_0_reco.cpu().numpy())
+                    rep_1_list.append(rep_1_reco.cpu().numpy())
+                    rep_2_list.append(rep_2_reco.cpu().numpy())
+                    rep_3_list.append(rep_3_reco.cpu().numpy())
+                    rep_4_list.append(rep_4_reco.cpu().numpy())
+                    rep_5_list.append(rep_5_reco.cpu().numpy())
+                    rep_6_list.append(rep_6_reco.cpu().numpy())
+                    rep_7_list.append(rep_7_reco.cpu().numpy())
+                    rep_8_list.append(rep_8_reco.cpu().numpy())
+                    rep_9_list.append(rep_9_reco.cpu().numpy())
+                    input_x_list.append(inputs.cpu().numpy())
+
+                    for i in range(np.shape(input_x_list)[1]):
+                        for j in range(np.shape(input_x_list)[0]):
+                            total_rec_train[0].append(rep_0_list[j][i])
+                            total_rec_train[1].append(rep_1_list[j][i])
+                            total_rec_train[2].append(rep_2_list[j][i])
+                            total_rec_train[3].append(rep_3_list[j][i])
+                            total_rec_train[4].append(rep_4_list[j][i])
+                            total_rec_train[5].append(rep_5_list[j][i])
+                            total_rec_train[6].append(rep_6_list[j][i])
+                            total_rec_train[7].append(rep_7_list[j][i])
+                            total_rec_train[8].append(rep_8_list[j][i])
+                            total_rec_train[9].append(rep_9_list[j][i])
 
                     rep_0 = torch.cat(rep_0_list, 0)
                     rep_1 = torch.cat(rep_1_list, 0)
@@ -417,6 +498,8 @@ class AETrainer(BaseTrainer):
                     for i in range(len(temp[0])):
                         errors.append(temp[:,i])
 
+
+
             errors = np.array(errors)
             # mean = np.mean(errors,0)
             # std = np.std(errors,0)
@@ -434,7 +517,10 @@ class AETrainer(BaseTrainer):
                     inputs, labels, idx = data
                 else:
                     inputs, labels, idx = data
+
                 inputs = inputs.to(self.device)
+
+                #inputs = 1 - inputs
 
                 # np.save('./log/object/'+str(dataset.normal_classes)+'/Images.npy', inputs.cpu().numpy())
                 # exit(0)
@@ -487,6 +573,8 @@ class AETrainer(BaseTrainer):
                             rep_8_list.append(rep_8_reco.cpu().numpy())
                             rep_9_list.append(rep_9_reco.cpu().numpy())
                             input_x_list.append(input_x.cpu().numpy())
+
+
 
                     # 16,32,3,128,128
                     for i in range(np.shape(input_x_list)[1]):
@@ -555,16 +643,16 @@ class AETrainer(BaseTrainer):
                     dist, ind = tree.query(test_x, k=2)
                     avg_dist = np.mean(dist,1)
                 elif self.ae_loss_type == 'object_HAE_ssim':
-                    scores = -ssim_loss(x,x_reco) \
-                             -ssim_loss(rep_0, rep_0_reco) \
-                             -ssim_loss(rep_1, rep_1_reco) \
-                             -ssim_loss(rep_2, rep_2_reco) \
-                             -ssim_loss(rep_3, rep_3_reco)\
-                             -ssim_loss(rep_4, rep_4_reco) \
-                             -ssim_loss(rep_5, rep_5_reco) \
-                             -ssim_loss(rep_6, rep_6_reco) \
-                             -ssim_loss(rep_7, rep_7_reco) \
-                             -ssim_loss(rep_8, rep_8_reco)
+                    # scores = -ssim_loss(x,x_reco) \
+                    #          -ssim_loss(rep_0, rep_0_reco) \
+                    #          -ssim_loss(rep_1, rep_1_reco) \
+                    #          -ssim_loss(rep_2, rep_2_reco) \
+                    #          -ssim_loss(rep_3, rep_3_reco)\
+                    #          -ssim_loss(rep_4, rep_4_reco) \
+                    #          -ssim_loss(rep_5, rep_5_reco) \
+                    #          -ssim_loss(rep_6, rep_6_reco) \
+                    #          -ssim_loss(rep_7, rep_7_reco) \
+                    #          -ssim_loss(rep_8, rep_8_reco)
                     temp = []
                     temp.append(-ssim_loss(inputs, x_reco).cpu().numpy())
                     temp.append(-ssim_loss(inputs, rep_0_reco).cpu().numpy())
@@ -732,6 +820,19 @@ class AETrainer(BaseTrainer):
                 n_batches += 1
             print(np.shape(total_inputs))
             print(np.shape(total_rec))
+
+
+            # save data for train
+            np.save('./log/' + self.dataset_name + '/' + str(dataset.normal_classes) + '/Images_train.npy',
+                    np.array(total_inputs_train))
+            for i in range(len(total_rec_train)):
+                np.save(
+                    './log/' + self.dataset_name + '/' + str(dataset.normal_classes) + '/Data_Reconstruction_' + str(
+                        i) + '_train'+'.npy', np.array(total_rec_train[i]))
+
+            # save data for test
+
+
             np.save('./log/'+self.dataset_name+'/' + str(dataset.normal_classes) + '/Images.npy', np.array(total_inputs))
             for i in range(len(total_rec)):
                 np.save('./log/'+self.dataset_name+'/' + str(dataset.normal_classes) + '/Data_Reconstruction_'+str(i)+'.npy', np.array(total_rec[i]))

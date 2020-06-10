@@ -78,6 +78,8 @@ def build_autoencoder(net_name):
         ae_net = OBJECT_HAE()
     if net_name == 'texture_hae':
         ae_net = TEXTURE_HAE()
+        # ae_net = TEXTURE_HAE_Autoencoder()
+
     if net_name == 'mnist_hae':
         ae_net = MNIST_HAE_Autoencoder()
 
