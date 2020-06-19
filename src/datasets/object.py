@@ -68,6 +68,8 @@ class OBJECT_Dataset(TorchvisionDataset):
 
         transform_test = transforms.Compose([transforms.Resize(256),
                                              transforms.ToTensor()])
+        transform_ground_truth = transforms.Compose([transforms.Resize(256),
+                                             transforms.ToTensor()])
         self.train_set = ImageFolder(root=self.root +'/train',transform =transform_train )
         # for i in range(len(self.train_set.imgs)):
         #     if np.shape( self.train_set[i][0].numpy()) != (3,256,256):
@@ -80,6 +82,7 @@ class OBJECT_Dataset(TorchvisionDataset):
         self.test_data = np.array(self.test_data)
         self.test_data = torch.from_numpy(self.test_data)
 
+        self.ground_truth = ImageFolder(root=self.root + '/ground_truth', transform=transform_ground_truth)
 
     def compute_mean_and_std(self):
 

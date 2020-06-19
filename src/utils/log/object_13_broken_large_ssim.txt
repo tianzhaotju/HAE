@@ -1,0 +1,2 @@
+layer error KNN,84.75%
+calculated error KNN,81.91666666666666%

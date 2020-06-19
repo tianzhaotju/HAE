@@ -17,10 +17,9 @@ class MNIST_HAE(BaseNet):
         self.rep_dim4 = int(16 * 3 * 3)
         self.rep_dim5 = int(9 * 1 * 1)
 
-        self.rep_dim_former = self.rep_dim3
-        self.rep_dim = int(self.rep_dim_former / 9)
+        self.rep_dim_former = self.rep_dim5
 
-        self.cate_dense_2 = 32
+        self.rep_dim = 4
 
         # Output size [8, 24, 24]
         self.conv1 = nn.Conv2d(1, 8, 5, stride=1, padding=0, bias=True)
@@ -39,6 +38,7 @@ class MNIST_HAE(BaseNet):
         self.bn5 = nn.BatchNorm2d(9, eps=1e-04, affine=False)
 
         self.dense = nn.Linear(self.rep_dim_former, self.rep_dim, bias=True)
+        self.dedense = nn.Linear(self.rep_dim, self.rep_dim_former, bias=True)
 
         # Decoder
         self.deconv1 = nn.ConvTranspose2d(8, 1, 5, stride=1, padding=0, bias=True)
@@ -49,7 +49,6 @@ class MNIST_HAE(BaseNet):
         self.debn3 = nn.BatchNorm2d(16, eps=1e-04, affine=False)
         self.deconv4 = nn.ConvTranspose2d(16, 16, 4, stride=2, padding=1, bias=True)
         self.debn4 = nn.BatchNorm2d(16, eps=1e-04, affine=False)
-
         self.deconv5 = nn.ConvTranspose2d(9, 16, 3, stride=1, padding=0, bias=True)
         self.debn5 = nn.BatchNorm2d(16, eps=1e-04, affine=False)
 
@@ -93,7 +92,7 @@ class MNIST_HAE_Autoencoder(BaseNet):
 
         self.rep_dim_former = self.rep_dim5
 
-        self.rep_dim = int(self.rep_dim_former / 9)
+        self.rep_dim = 4
 
         # Output size [8, 24, 24]
         self.conv1 = nn.Conv2d(1, 8, 5, stride=1, padding=0, bias=True)
@@ -112,6 +111,7 @@ class MNIST_HAE_Autoencoder(BaseNet):
         self.bn5 = nn.BatchNorm2d(9, eps=1e-04, affine=False)
 
         self.dense = nn.Linear(self.rep_dim_former, self.rep_dim, bias=True)
+        self.dedense = nn.Linear(self.rep_dim, self.rep_dim_former, bias=True)
 
         # Decoder
         self.deconv1 = nn.ConvTranspose2d(8, 1, 5, stride=1, padding=0, bias=True)
@@ -130,33 +130,51 @@ class MNIST_HAE_Autoencoder(BaseNet):
         x = self.conv1(x_input)
         rep_1 = F.leaky_relu(self.bn1(x))
         x = self.deconv1(rep_1)
-        input_reco = F.leaky_relu(self.debn1(x))
+        input_reco = torch.sigmoid(x)
 
 
         x = self.conv2(rep_1)
         rep_2 = F.leaky_relu(self.bn2(x))
         x = self.deconv2(rep_2)
-        rep_1_reco = F.leaky_relu(self.debn2(x))
+        x = self.deconv1(x)
+        rep_1_reco = torch.sigmoid(x)
 
 
         x = self.conv3(rep_2)
         rep_3 = F.leaky_relu(self.bn3(x))
         x = self.deconv3(rep_3)
-        rep_2_reco = F.leaky_relu(self.debn3(x))
-
+        x = self.deconv2(x)
+        x = self.deconv1(x)
+        rep_2_reco = torch.sigmoid(x)
 
         x = self.conv4(rep_3)
         rep_4 = F.leaky_relu(self.bn4(x))
-        x = self.deconv3(rep_4)
-        rep_3_reco = F.leaky_relu(self.debn3(x))
+        x = self.deconv4(rep_4)
+        x = self.deconv3(x)
+        x = self.deconv2(x)
+        x = self.deconv1(x)
+        rep_3_reco = torch.sigmoid(x)
 
 
         x = self.conv5(rep_4)
         rep_5 = F.leaky_relu(self.bn5(x))
-
         x = self.deconv5(rep_5)
-        rep_4_reco = F.leaky_relu(self.debn5(x))
+        x = self.deconv4(x)
+        x = self.deconv3(x)
+        x = self.deconv2(x)
+        x = self.deconv1(x)
+        rep_4_reco = torch.sigmoid(x)
+
 
         rep_5 = rep_5.view(rep_5.size(0), -1)
+        rep_5 = self.dense(rep_5)
+        rep_5 = self.dedense(rep_5)
+        rep_5 = rep_5.view(rep_5.size(0), 9, 1,1)
+        x = self.deconv5(rep_5)
+        x = self.deconv4(x)
+        x = self.deconv3(x)
+        x = self.deconv2(x)
+        x = self.deconv1(x)
+        rep_5_reco = torch.sigmoid(x)
 
-        return x_input, input_reco, rep_1, rep_1_reco, rep_2, rep_2_reco, rep_3, rep_3_reco,  rep_4, rep_4_reco, rep_5
+        return input_reco, rep_1_reco,  rep_2_reco,  rep_3_reco,   rep_4_reco, rep_5_reco

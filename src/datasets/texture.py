@@ -70,7 +70,9 @@ class TEXTURE_Dataset(TorchvisionDataset):
         #                                 transforms.Normalize(mean[self.normal_classes], std[self.normal_classes]),
         #                                 ])
 
-        transform_train = transforms.Compose([transforms.ToTensor()])
+        transform_train = transforms.Compose([transforms.Resize(512),
+                                              transforms.RandomCrop(128),
+                                              transforms.ToTensor()])
 
         # transform_test = transforms.Compose([transforms.Resize(512),
         #                                       transforms.ToTensor(),
@@ -79,8 +81,12 @@ class TEXTURE_Dataset(TorchvisionDataset):
         transform_test = transforms.Compose([transforms.Resize(512),
                                              transforms.ToTensor()])
 
+        transform_ground_truth = transforms.Compose([transforms.Resize(512),
+                                             transforms.ToTensor()])
+
         self.train_set = ImageFolder(root=self.root +'/train',transform =transform_train )
         self.test_set = ImageFolder(root=self.root + '/test', transform=transform_test)
+        self.ground_truth = ImageFolder(root=self.root + '/ground_truth', transform=transform_ground_truth)
 
 
 
